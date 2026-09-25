@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weekly Health Dashboard</title><style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+#app { min-height: 100vh; padding: 48px 24px 120px; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+.wrap.narrow { max-width: 720px; }
+.hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.hdr h1 { font-size: 30px; letter-spacing: -.02em; }
+.hdr p { opacity: .55; margin-top: 4px; font-size: 14px; }
+small { font-size: .75em; }
+/* ---------- 4. Timeline ---------- */
+body[data-design="timeline"] { background: #fff; color: #111827; }
+.d-timeline .tl { display: flex; flex-direction: column; gap: 10px; }
+.d-timeline .tlrow { display: grid; grid-template-columns: 70px 1fr 120px; gap: 16px; align-items: center; }
+.d-timeline .tlrow.today .date b { color: #2563eb; }
+.d-timeline .date b { display: block; font-size: 15px; }
+.d-timeline .date small { color: #9ca3af; }
+.d-timeline .ticks { position: relative; height: 16px; font-size: 11px; color: #9ca3af; }
+.d-timeline .ticks span { position: absolute; transform: translateX(-50%); }
+.d-timeline .track {
+  position: relative; height: 56px; border-radius: 10px; background-color: #f9fafb;
+  background-image: repeating-linear-gradient(to right, #eceef2 0 1px, transparent 1px 12.5%);
+}
+.d-timeline .goal { position: absolute; top: 0; bottom: 0; border-left: 1.5px dashed #d1d5db; }
+.d-timeline .sleep {
+  position: absolute; top: 7px; height: 24px; border-radius: 6px; background: #6366F1; color: #fff;
+  font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.d-timeline .sleep.late { background: #a5a8f5; }
+.d-timeline .sleep.away { background: repeating-linear-gradient(45deg, #a5b4fc 0 6px, #c7d2fe 6px 12px); color: #3730a3; }
+.d-timeline .mk { position: absolute; top: 19px; z-index: 1; width: 16px; height: 16px; border-radius: 50%; transform: translate(-50%, -50%); background: #fff; border: 3px solid #d1d5db; }
+.d-timeline .mk.on { background: var(--c); border-color: #fff; box-shadow: 0 0 0 2px var(--c); }
+.d-timeline .mk:not(.on) { border-color: var(--c); }
+.d-timeline .mk.sq { border-radius: 4px; }
+/* Workout markers: same chip as the right column, ~15% smaller (32px → 27px, 16px → 13.6px). */
+.d-timeline .chip.emk { position: absolute; top: 19px; width: 27px; height: 27px; border-radius: 8px; font-size: 13.6px; transform: translate(-50%, -50%); z-index: 2; background: color-mix(in srgb, var(--c) 18%, white); }
+.d-timeline .kemo { font-size: 13px; line-height: 1; }
+.d-timeline .side { display: flex; align-items: center; gap: 6px; }
+.d-timeline .chip { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font-size: 16px; background: #f3f4f6; filter: grayscale(1); opacity: .35; }
+.d-timeline .chip.on { background: color-mix(in srgb, var(--c) 18%, white); box-shadow: inset 0 0 0 1.5px var(--c); filter: none; opacity: 1; }
+.d-timeline .cal { position: absolute; left: 0; top: 39px; height: 9px; border-radius: 0 5px 5px 0; background: #fcd9a0; }
+.d-timeline .cal.on { background: #F59E0B; }
+.d-timeline .kc { position: absolute; top: 43.5px; transform: translateY(-50%); margin-left: 6px; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; color: #d9a44a; }
+.d-timeline .kc.on { color: #d97706; }
+.d-timeline .kticks { color: #d9a44a; }
+.d-timeline .kticks .goalk { color: #d97706; font-weight: 700; }
+.d-timeline .kticks em { position: absolute; right: 0; font-style: normal; }
+.d-timeline .key { list-style: none; display: flex; flex-wrap: wrap; gap: 18px; margin-top: 24px; font-size: 12px; color: #6b7280; }
+.d-timeline .key li { display: flex; align-items: center; gap: 6px; }
+.d-timeline .key i { display: inline-block; width: 16px; height: 10px; border-radius: 3px; }
+.d-timeline .k-sleep { background: #6366F1; }
+.d-timeline .k-late { background: #a5a8f5; }
+.d-timeline .k-away { background: repeating-linear-gradient(45deg, #a5b4fc 0 3px, #c7d2fe 3px 6px); }
+.d-timeline .k-wake { background: #F43F5E; width: 10px !important; border-radius: 50% !important; }
+.d-timeline .k-out { background: #65A30D; width: 10px !important; }
+.d-timeline .k-goal { border-left: 1.5px dashed #9ca3af; width: 2px !important; border-radius: 0 !important; height: 14px !important; }
+.d-timeline .k-cal { background: #F59E0B; }
+.d-timeline .k-calm { background: #fcd9a0; }
+
+
+
+.d-timeline .side { flex-direction: column; align-items: flex-start; gap: 4px; }
+.d-timeline .sidechips { display: flex; gap: 5px; min-height: 24px; }
+.d-timeline .side .chip { width: 26px; height: 26px; border-radius: 8px; font-size: 13px; filter: none; opacity: 1; }
+.d-timeline .sidevals { color: #6b7280; font-size: 11px; line-height: 1.35; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.d-timeline .chip.wake { background: color-mix(in srgb, var(--c) 18%, white); box-shadow: inset 0 0 0 1.5px var(--c); }
+.d-timeline .workout-details { margin-top: 24px; display: grid; gap: 10px; }
+.d-timeline .workout-card { display: grid; grid-template-columns: 80px 1fr; gap: 14px; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 12px; background: #f9fafb; }
+.d-timeline .workout-date b { display: block; font-size: 14px; }
+.d-timeline .workout-date small { color: #9ca3af; }
+.d-timeline .workout-main b { display: block; font-size: 14px; }
+.d-timeline .workout-stats { color: #6b7280; font-size: 12px; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px; }
+.d-timeline .workout-empty { color: #9ca3af; font-size: 13px; padding: 14px 0; }
+@media (max-width: 620px) {
+  #app { padding: 30px 10px 60px; }
+  .d-timeline .tlrow { grid-template-columns: 48px minmax(190px, 1fr) 74px; gap: 7px; }
+  .d-timeline .date b { font-size: 13px; }
+  .d-timeline .date small, .d-timeline .ticks, .d-timeline .kc, .d-timeline .sidevals { font-size: 9px; }
+  .d-timeline .key { gap: 10px; }
+}
+
+</style></head><body data-design="timeline"><main id="app" class="d-timeline"></main><script>
+const encodedData = "__DASHBOARD_DATA__";
+const payload = JSON.parse(atob(encodedData.replace(/\s/g, "")));
+const rawDays = payload.days || [];
+const todayISO = new Intl.DateTimeFormat("en-CA", {timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+const days = rawDays.map(d => ({...d, dateObj:new Date(d.date + "T12:00:00"), isToday:d.date === todayISO}));
+const T0 = -180, SPAN = 1440, CAL_GOAL = 3000, CAL_GOAL_MIN = 600;
+const pos = m => `${(((m - T0) / SPAN) * 100).toFixed(2)}%`;
+const kcalPerMin = CAL_GOAL / (CAL_GOAL_MIN - T0);
+const kpos = k => pos(T0 + (Math.max(0, Number(k) || 0) / kcalPerMin));
+const WD = d => d.dateObj.toLocaleDateString("en-US", {weekday:"short"});
+const MD = d => d.dateObj.toLocaleDateString("en-US", {month:"short",day:"numeric"});
+const range = days.length ? `${MD(days[0])} – ${MD(days[days.length - 1])}` : "No data";
+const fmt = n => n == null ? "—" : Number(n).toLocaleString("en-US", {maximumFractionDigits:2});
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function minutesET(ts) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).filter(p => p.type !== "literal").map(p => [p.type,p.value]));
+  return (Number(parts.hour) % 24) * 60 + Number(parts.minute);
+}
+function timeET(ts) { return new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York",hour:"numeric",minute:"2-digit"}).format(new Date(ts)); }
+function workoutIcon(name) {
+  const n = String(name).toLowerCase();
+  if (n.includes("run")) return "🏃";
+  if (/lift|gym|strength/.test(n)) return "🏋️";
+  if (/bike|cycl/.test(n)) return "🚴";
+  if (n.includes("swim")) return "🏊";
+  if (n.includes("hike")) return "🥾";
+  if (/yoga|pilates/.test(n)) return "🧘";
+  if (n.includes("row")) return "🚣";
+  return "💪";
+}
+function wakeStyle(name) {
+  if (name === "wakeAlarm") return {icon:"🔔", color:"#F59E0B", label:"Wake alarm"};
+  if (name === "wakeUpSnoozed") return {icon:"😴", color:"#EAB308", label:"Snoozed"};
+  return {icon:"☀️", color:"#F43F5E", label:"Alarm stopped"};
+}
+function workoutDetails(w) {
+  const parts = [];
+  if (w.durationMinutes != null) parts.push(`${fmt(w.durationMinutes)} min`);
+  if (w.caloriesBurned != null) parts.push(`${fmt(w.caloriesBurned)} cal`);
+  if (w.distanceKm != null) parts.push(`${fmt(w.distanceKm)} km`);
+  return parts.join(" · ");
+}
+function eventMarkers(d) {
+  const workout = (d.workouts || []).map(w => {
+    const m = Math.min(1260, Math.max(0, minutesET(w.timestamp)));
+    return `<span class="chip on emk" style="left:${pos(m)};--c:#8B5CF6" title="${esc(w.name)} · ${timeET(w.timestamp)}">${workoutIcon(w.name)}</span>`;
+  });
+  const wake = (d.wakeEvents || []).map(w => {
+    const m = Math.min(1260, Math.max(0, minutesET(w.timestamp)));
+    const s = wakeStyle(w.name);
+    return `<span class="chip wake emk" style="left:${pos(m)};--c:${s.color}" title="${s.label} · ${timeET(w.timestamp)}">${s.icon}</span>`;
+  });
+  return workout.concat(wake).join("");
+}
+function sideChips(d) {
+  const icons = [];
+  if (d.sleptAtHome) icons.push(`<span class="chip on" style="--c:#0891B2" title="Slept at home">🏠</span>`);
+  (d.workouts || []).forEach(w => icons.push(`<span class="chip on" style="--c:#8B5CF6" title="${esc(w.name)} · ${timeET(w.timestamp)}">${workoutIcon(w.name)}</span>`));
+  return icons.join("");
+}
+const ticks = ["9p","12a","3a","6a","9a","12p","3p","6p","9p"];
+const rendered = `<div class="wrap"><header class="hdr"><div><h1>Daily rhythm</h1><p>${range} · 9 PM the night before → 9 PM</p></div></header><div class="tl"><div class="tlrow head"><div></div><div class="ticks">${ticks.map((t,i) => `<span style="left:${i * 12.5}%">${t}</span>`).join("")}</div><div></div></div>${days.map(d => {
+  const calories = Math.max(0, Number(d.calories) || 0);
+  return `<div class="tlrow ${d.isToday ? "today" : ""}"><div class="date"><b>${d.isToday ? "Today" : WD(d)}</b><small>${MD(d)}</small></div><div class="track"><div class="goal" style="left:${kpos(CAL_GOAL)}" title="3,000 calorie goal"></div>${d.sleptAtHome ? `<span class="chip on emk" style="left:${pos(0)};--c:#0891B2" title="Slept at home · 12:00 AM">🏠</span>` : ""}${eventMarkers(d)}<div class="cal ${calories >= CAL_GOAL ? "on" : ""}" style="width:${kpos(calories)}" title="${fmt(d.calories)} calories"></div><span class="kc ${calories >= CAL_GOAL ? "on" : ""}" style="left:${kpos(calories)}">${fmt(d.calories)}</span></div><div class="side"><div class="sidechips">${sideChips(d)}</div><div class="sidevals"><div>👟 ${fmt(d.steps)}</div><div>📱 ${d.screenTime == null ? "—" : fmt(d.screenTime) + " h"}</div></div></div></div>`;
+}).join("")}<div class="tlrow foot"><div></div><div class="ticks kticks">${[0,1000,2000,3000].map(k => `<span class="${k === CAL_GOAL ? "goalk" : ""}" style="left:${kpos(k)}">${k ? k / 1000 + "k" : "0"}</span>`).join("")}<em>kcal</em></div><div></div></div></div><div class="workout-details"><div class="section-title"><b>Workouts</b></div>${days.flatMap(d => (d.workouts || []).map(w => `<div class="workout-card"><div class="workout-date"><b>${WD(d)}</b><small>${MD(d)} · ${timeET(w.timestamp)}</small></div><div class="workout-main"><b>${workoutIcon(w.name)} ${esc(w.name)}</b><div class="workout-stats">${workoutDetails(w) || "No measurements available"}</div></div></div>`)).join("") || '<div class="workout-empty">No workouts in the last seven days.</div>'}</div><ul class="key"><li><span class="kemo">🏠</span>Slept at home (12 AM)</li><li><span class="kemo">🔔</span>Wake alarm</li><li><span class="kemo">😴</span>Snoozed</li><li><span class="kemo">☀️</span>Alarm stopped</li><li><span class="kemo">🏋️</span>Workout</li><li><i class="k-goal"></i>3k calorie goal</li><li><i class="k-cal"></i>Calories</li><li><span class="kemo">👟</span>Steps</li><li><span class="kemo">📱</span>Screen time</li></ul></div>`;
+document.getElementById("app").innerHTML = rendered;
+</script></body></html>
